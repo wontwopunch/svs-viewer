@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVS Viewer with OpenSeadragon</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/2.4.2/openseadragon.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #openseadragon1 {
+            width: 800px;
+            height: 600px;
+            margin: 20px auto;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>SVS Viewer with OpenSeadragon</h1>
+
+    <!-- OpenSeadragon Container -->
+    <div id="openseadragon1"></div>
+
+    <div id="image-container">
+        <img id="svs-image" src="" alt="SVS Image" width="800" style="display:none;">
+    </div>
+
+    <div id="upload-container">
+        <input type="file" id="svs-file" accept=".svs">
+        <button onclick="uploadFile()">Upload and View</button>
+    </div>
+
+    <div id="memo-container">
+        <textarea id="memo" rows="4" cols="50" placeholder="Write your memo here..."></textarea>
+        <button onclick="saveMemo()">Save Memo</button>
+    </div>
+
+    <div id="link-container">
+        <button onclick="generateLink()">Generate Shareable Link</button>
+        <p id="shareable-link"></p>
+    </div>
+
+    <script>
+        function uploadFile() {
+            const fileInput = document.getElementById('svs-file');
+            const file = fileInput.files[0];
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const viewer = OpenSeadragon({
+                    id: "openseadragon1",
+                    prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/2.4.2/images/",
+                    tileSources: {
+                        Image: {
+                            xmlns: "http://schemas.microsoft.com/deepzoom/2008",
+                            Url: data.tileUrl,  // 서버에서 전송된 타일 이미지 URL
+                            Format: "png",
+                            Overlap: "2",
+                            TileSize: "256",
+                            Size: {
+                                Width: data.width,  // 이미지 전체 가로 크기
+                                Height: data.height  // 이미지 전체 세로 크기
+                            }
+                        }
+                    },
+                    showNavigator: true
+                });
+            })
+            .catch(error => {
+                console.error('Error uploading file:', error);
+            });
+        }
+
+        function saveMemo() {
+            const memo = document.getElementById('memo').value;
+            localStorage.setItem('svs_memo', memo);
+            alert("Memo saved locally.");
+        }
+
+        function generateLink() {
+            const memo = localStorage.getItem('svs_memo');
+            const link = window.location.href + "?memo=" + encodeURIComponent(memo);
+            document.getElementById('shareable-link').innerText = link;
+        }
+    </script>
+
+</body>
+</html>

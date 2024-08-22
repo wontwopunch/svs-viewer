@@ -1,0 +1,12 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+#image-container {
+    text-align: center;
+    margin: 20px;
+}
+
+#memo-container {
+    margin: 20px;
+}
